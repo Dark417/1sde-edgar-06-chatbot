@@ -1,50 +1,53 @@
 # 1sde-edgar-06-chatbot
 
-**Repo 6 of 6** in the edgar-lakehouse project — a natural-language interface over
-the gold marts. Ask "which companies restated revenue most materially this year?"
-and get an answer with the accession numbers it came from.
-
-```
-1 contracts ─► 2 infra ─► 3 ingest ─► 4 pipelines ─┬─► 5 serving  (REST + UI)
-                                                    └─► 6 chatbot (NL + tools)
-```
+Chat with the EDGAR lakehouse gold layer in plain English. Streamlit UI, Amazon
+Bedrock for language, DuckDB over exported Parquet for every number.
 
 ## The one rule
 
-**The model never computes a number.** It chooses which tool to call; the tool
-runs fixed SQL over the gold Parquet and returns data plus citations. Sums,
-rankings, deltas and date filtering happen in SQL, never in the LLM. Every figure
-in an answer carries the asserting `accession_number` and a sec.gov link.
+**The model never calculates.** It chooses a tool; the tool runs fixed SQL and
+returns rows. Sums, rankings, deltas and date filtering all happen in SQL. Every
+answer carries an expandable "How I got this" panel showing the exact tool calls
+and arguments used — so a wrong answer is diagnosable rather than mysterious.
 
-That is the difference between a demo that impresses and one a finance team could
-trust — a confidently wrong revenue figure is worse than no chatbot.
+## Run it
 
-## Design
+```bash
+python -m venv .venv && .venv/Scripts/pip install streamlit duckdb boto3 pyarrow
 
-- **Tool calling** — 8 typed, read-only functions over gold; no side effects.
-- **Context engineering** — `schema_card.md`, `metrics.yaml`, `examples.yaml`,
-  `policy.md` as versioned assets with tests, not inline strings.
-- **Routing** — company / cross-company / metadata / out-of-scope /
-  advice-seeking, with advice structurally unable to reach the tool executor.
-- **Memory** — bounded conversation window plus resolved-entity slots, so
-  "what about 2023?" works. No long-term or vector memory.
-- **Guardrails** — citation verification, no investment advice, injection screen,
-  hard caps that are *reported* rather than silently applied.
-- **Orchestration** — LangGraph for explicit, testable control flow; LangChain
-  only for model/tool adapters; Bedrock for inference.
+# one-time: pull gold out of Databricks into local Parquet
+set DBX_HOST=<workspace-host>
+set DBX_WAREHOUSE_ID=<warehouse-id>
+set DBX_TOKEN=<pat>
+.venv/Scripts/python scripts/export_gold.py
 
-**No RAG and no vector store**, deliberately: the data is structured and numeric,
-so retrieval is a `WHERE` clause. **No Databricks connection**, deliberately:
-Free Edition compute can shut down for the day and the demo must survive it.
+run.bat            # or: streamlit run app.py
+```
+
+`run.bat` refreshes the AWS SSO session if needed and starts the UI on
+http://localhost:8501.
+
+## What you can ask
+
+- "What companies do you have data on?"
+- "Which company had the biggest material restatement?"
+- "Compare revenue across all companies"
+- "Tell me about Apple's profile and financials"
+- "How many restatements are there, and which concepts get restated most?"
+
+## Design notes
+
+- **No live Databricks dependency.** The app reads Parquet exported from gold,
+  so a Free Edition quota shutdown cannot take it down.
+- **Model is probed, not assumed.** It tries Claude first and falls back to
+  Amazon Nova, so it upgrades itself when Anthropic access is enabled.
+- **Refuses investment advice** and says precisely what the dataset lacks
+  rather than guessing.
+- `materiality_band` is a product heuristic, not an accounting standard, and is
+  labelled as such everywhere it appears.
 
 Full rationale: [docs/10-agent-design.md](docs/10-agent-design.md) ·
 Build brief: [AGENTS.md](AGENTS.md)
 
-## Status
-
-Design complete; implementation not started. See `AGENTS.md` §6 for the feature
-list and §11 for the definition of done.
-
-> Built on Databricks **Free Edition**, which is not licensed for commercial use —
-> this is a portfolio/demo project. The bot answers from a daily batch export and
-> discloses its own staleness; it does not give investment advice.
+> Portfolio project on Databricks Free Edition, not licensed for commercial use.
+> Not investment advice.

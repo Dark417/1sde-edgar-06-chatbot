@@ -221,3 +221,6 @@ docs/LOCAL-VALUES.md
 *.pem
 *.key
 plan.txt
+data/
+.venv/
+ui.png

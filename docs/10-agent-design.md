@@ -175,7 +175,103 @@ the right answer *here* is a better interview answer than adopting it.
   sufficient, and the right call if LangGraph proves to be friction. Keep this in
   your pocket: if the graph starts costing more than it explains, delete it.
 
-## 9. Evaluation
+## 9. Abuse, rate limiting, and cost containment
+
+Repo 5 serves DuckDB reads that cost effectively nothing, so a traffic spike there
+is a performance problem. **This repo spends real money per request**, so a spike
+is a bill, and a scripted abuser is an unbounded one. The two failure modes are
+different and need different controls:
+
+- **Availability** — a dozen testers, or one loop, making the bot unusable for
+  everyone else. Fixed by rate limiting.
+- **Cost** — a slow drip of requests under any rate limit, running all month.
+  Fixed by a hard budget ceiling. **Rate limiting alone does not protect the
+  wallet**, and this is the mistake worth not making.
+
+### What a turn actually costs
+
+Roughly 5k input tokens (system prompt ≈ 3k: schema card, metrics, examples,
+policy; tool results ≈ 2k) and ~400 output. At small-model prices that is around
+half a cent a turn; at mid-tier, a couple of cents. So:
+
+| Scenario | Turns | Order of cost |
+|---|---|---|
+| 12 testers × 20 turns | 240 | a few dollars |
+| One scripted loop overnight | 10,000+ | hundreds |
+
+The design target is therefore: **generous to humans, hostile to loops.**
+
+### Layered controls, cheapest first
+
+**L0 — Hard budget ceiling (do this first).** An AWS Budget alarm is a *notice*,
+not a stop, so the app also keeps its own daily token/turn counter and flips into
+a read-only "demo limit reached for today" mode when it trips. Degraded, honest,
+and free is better than a surprise invoice.
+
+**L1 — Structural, already in the design.** Several rules written as correctness
+guardrails double as cost controls, which is why they were cheap to adopt:
+routing refuses out-of-scope and advice-seeking turns *before* the expensive model
+runs; ≤6 tool calls; ≤8k tokens of tool output; a hard `max_tokens` on output; a
+20s wall clock. An out-of-boundary question should cost a router call and nothing
+more.
+
+**L2 — Application rate limits (the reliable layer).** In-process token buckets,
+because the app is the only place that sees a *turn* rather than an HTTP request:
+
+| Limit | Suggested start |
+|---|---|
+| Per-IP burst | 5 turns / 10 min |
+| Per-IP daily | 20 turns / day |
+| Per-session | 30 turns, then a fresh-conversation prompt |
+| Global concurrency | 4 in-flight model calls (a semaphore) |
+| Global daily | ~300 turns, then degraded mode |
+| Input length | reject > 500 characters before any model call |
+
+Key the buckets on **IP + an anonymous session id**, not IP alone — mobile and
+corporate NAT put many real users behind one address. The global concurrency
+semaphore matters more than it looks: it is what stops a burst from tripping
+Bedrock's account-level throughput quota and turning one abuser's traffic into
+`ThrottlingException` for everyone.
+
+**L3 — Edge (optional, free).** Putting Cloudflare's free tier in front of Fly
+gives bot detection, a rate-limiting rule, and static-asset caching before traffic
+reaches the container. Worth doing if the link is ever posted publicly; not worth
+doing for a handful of known testers.
+
+**L4 — Response caching.** A demo receives the *same questions repeatedly*.
+Caching normalized question → answer for a short TTL cuts both cost and latency
+noticeably, and is safe as long as the cache key includes the manifest's
+`generated_at` so a fresh export invalidates it.
+
+Also: enable **prompt caching** on the model call if available. The system prompt
+is byte-identical across every turn and is the majority of input tokens, so this
+is the single largest cost reduction available for a context-heavy agent.
+
+### Why not AWS-native rate limiting
+
+API Gateway usage plans and WAF rate-based rules are the standard AWS answers, but
+they sit in front of AWS-hosted endpoints. This bot deploys to Fly (design doc
+§5.4 — the demo must survive Databricks *and* be trivially always-on), so putting
+API Gateway or CloudFront+WAF in front means adding AWS hosting for the sole
+purpose of throttling. Not worth it at this scale. Bedrock itself has no
+per-caller rate limiting — its quotas are account-wide, which is precisely why the
+app must self-limit rather than rely on the platform.
+
+If this ever moved to AWS hosting, WAF rate-based rules plus API Gateway usage
+plans would replace L2/L3 and the app-level limiter would stay as defense in
+depth.
+
+### Degrade, never fail
+
+Hitting a limit returns a **200 with an explanation**, not a 500: what the limit
+is, when it resets, and a link to repo 5's REST API and to a canned example
+answer. A rate-limited demo that explains itself still demonstrates the product; a
+stack trace does not.
+
+Every turn is logged with token counts and estimated cost, so "what happened last
+night" is answerable.
+
+## 10. Evaluation
 
 Model output is non-deterministic, so assert **properties**, not strings:
 
@@ -193,7 +289,7 @@ Model output is non-deterministic, so assert **properties**, not strings:
 Scored in CI on a cheap model; a drop below threshold fails the build. Without
 this, "it works" means "it worked the three times I tried it."
 
-## 10. Open questions
+## 11. Open questions
 
 1. **Model choice per node** — a small model for routing and a larger one for
    synthesis is the obvious split; measure before assuming the large one is

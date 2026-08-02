@@ -134,6 +134,7 @@ abstractions; those hide the control flow this repo is meant to make visible.
 │   │   └── build.py         # L3: LangGraph wiring
 │   ├── memory.py            # L2: conversation window + resolved-entity slots
 │   ├── guardrails.py        # L2: input scope check, output citation check
+│   ├── limits.py            # L2: rate limits, budget ceiling, response cache
 │   └── app.py               # L4: FastAPI + SSE, wiring only
 ├── static/                  # index.html, app.js, style.css
 ├── evals/                   # golden question set + scoring
@@ -185,7 +186,11 @@ that builds a SQL string, is a review failure.
     review.
 13. **No prompt contains a secret, a bucket name, or an account id.** Global rule
     on sensitive values applies to prompt assets exactly as to code.
-14. **Every graph node is a pure function of state.** No node reads config from
+14. **No unbounded spend.** Every turn passes a rate limiter and counts against a
+    daily budget ceiling before a model is called. Exceeding a limit degrades with
+    an explanation (HTTP 200), never a 500 and never silently. This repo is the
+    only one in the project where traffic costs money per request (F-9).
+15. **Every graph node is a pure function of state.** No node reads config from
     the environment or calls a model outside the injected client — otherwise the
     graph is untestable and the evals are theatre.
 
@@ -313,10 +318,51 @@ That panel is the demo: it turns "chatbot" into "auditable data agent."
 `run_sql(query)` restricted to: SELECT only, gold views only, mandatory LIMIT,
 5s timeout, EXPLAIN-checked before execution, feature-flagged.
 
-Ship F-1..F-7 first. Enable this only after the eval suite is green, and label
+Ship F-1..F-7 and F-9 first. Enable this only after the eval suite is green, and label
 its answers as generated SQL in the trace panel.
 
-### F-9 · `evals/`
+### F-9 · `limits.py` — rate limiting and cost containment 🔴
+This repo spends money per request, so a scripted loop is an unbounded bill, not
+just a slow demo. Two distinct failures need two distinct controls: rate limiting
+protects *availability*, a hard budget ceiling protects *the wallet*. Rate limits
+alone do not stop a slow drip. Full rationale in `docs/10-agent-design.md` §9.
+
+- **Daily budget ceiling**: the app counts its own turns and tokens and flips to a
+  degraded "demo limit reached today" mode when it trips. An AWS Budget alarm is a
+  notice, not a stop, so it is a backstop and not the control.
+- **Token buckets**, keyed on IP **and** an anonymous session id (IP alone
+  collapses everyone behind mobile/corporate NAT into one bucket):
+
+  | Limit | Start at |
+  |---|---|
+  | per-IP burst | 5 turns / 10 min |
+  | per-IP daily | 20 turns / day |
+  | per-session | 30 turns |
+  | global concurrency | 4 in-flight model calls |
+  | global daily | ~300 turns |
+  | input length | reject > 500 chars before any model call |
+
+- **Global concurrency semaphore** matters more than it looks: it prevents a burst
+  from tripping Bedrock's account-wide throughput quota and turning one abuser's
+  traffic into `ThrottlingException` for every other user.
+- **Response cache** keyed on `(normalized_question, manifest.generated_at)`, so a
+  new export invalidates it. Demos get the same questions repeatedly.
+- **Prompt caching** on the model call where available: the system prompt is
+  byte-identical every turn and is most of the input tokens.
+
+**Degrade, never fail.** A limit returns **200 with an explanation** — what the
+limit is, when it resets, a link to repo 5's REST API and a canned example answer.
+Never a 500, never a bare "try again later".
+
+**Acceptance**
+- A test drives 10 turns from one IP and asserts turns 6+ are refused with a reset
+  time, not an error status.
+- A test asserts the global semaphore caps concurrent model calls.
+- A test asserts the daily ceiling flips to degraded mode and that degraded mode
+  still serves `/health` and `/capabilities`.
+- Every turn is logged with token counts and estimated cost.
+
+### F-10 · `evals/`
 A golden set of ~30 questions with expected tool plans and assertions on the
 answer (contains a citation, names the right company, refuses when it should).
 Scored in CI. Categories: factual lookup, ranking, ambiguity, restatement,
@@ -420,6 +466,9 @@ know it works (property-based evals, not vibes).
 - [ ] Ambiguous company names ask instead of guessing
 - [ ] Stale data disclosed; `/health` 503 over 48h
 - [ ] Tool-trace panel visible in the UI
+- [ ] Rate limits enforced; exceeding one returns 200 with a reset time
+- [ ] Daily budget ceiling flips to degraded mode instead of overspending
+- [ ] Every turn logged with token count and estimated cost
 - [ ] Eval suite green in CI with a published score
 - [ ] Deployed, public URL live, clicked from another device
 

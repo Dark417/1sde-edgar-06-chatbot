@@ -43,7 +43,9 @@ def _config() -> tuple[str, str, str]:
     token = os.environ.get("DBX_TOKEN", "")
     warehouse = os.environ.get("DBX_WAREHOUSE_ID", "")
     missing = [
-        n for n, v in (("DBX_HOST", host), ("DBX_TOKEN", token), ("DBX_WAREHOUSE_ID", warehouse)) if not v
+        n
+        for n, v in (("DBX_HOST", host), ("DBX_TOKEN", token), ("DBX_WAREHOUSE_ID", warehouse))
+        if not v
     ]
     if missing:
         sys.exit(
@@ -69,8 +71,13 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
     # A redirect would replay the Authorization header at whatever host the
     # 30x names. There is no legitimate redirect in this API; refuse them all.
     def redirect_request(self, *args, **kwargs):  # type: ignore[override]
-        raise urllib.error.HTTPError(args[3].full_url if len(args) > 3 else "", 302,
-                                     "redirect refused (would leak the PAT)", {}, None)
+        raise urllib.error.HTTPError(
+            args[3].full_url if len(args) > 3 else "",
+            302,
+            "redirect refused (would leak the PAT)",
+            {},
+            None,
+        )
 
 
 _OPENER = urllib.request.build_opener(_NoRedirect)
@@ -89,6 +96,7 @@ def _open(req: urllib.request.Request, timeout: int = 120):
 def query(sql: str) -> tuple[list[str], list[list], list[str]]:
     """Run one statement, returning (column names, rows, column type names)."""
     import re
+
     global _CHUNK_RE
     if _CHUNK_RE is None:
         _CHUNK_RE = re.compile(r"^/api/2\.0/sql/statements/[A-Za-z0-9_-]+/result/chunks/\d+")

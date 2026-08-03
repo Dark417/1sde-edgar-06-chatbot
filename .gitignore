@@ -221,7 +221,7 @@ docs/LOCAL-VALUES.md
 *.pem
 *.key
 plan.txt
-data/
+/data/
 .venv/
 ui.png
 scripts/.scan-needles

@@ -15,11 +15,19 @@ from typing import Any
 SSM_PREFIX = "/edgar-lakehouse/chat"
 PROBE_SENTINEL = "probe"  # SSM forbids empty values; this means "probe candidates"
 
-# Quality-ordered; first invocable wins. Claude entries activate themselves the
-# day the Bedrock Anthropic use-case form is approved (see SETUP-CREDENTIALS.md).
+# Quality-ordered; first invocable wins. The Anthropic use-case form was
+# submitted and approved on 2026-08-02, so the Claude entries are live in
+# account 806 (us-east-2); the Nova entries remain as a working fallback for a
+# fresh account that has not been through that form yet.
+#
+# Sonnet leads rather than Haiku: the model's job here is to pick tools and
+# write careful prose around numbers it must not alter, and Sonnet is markedly
+# better at both the multi-step tool plans (resolve -> query -> compare) and at
+# honouring the "never state a figure without unit and period" rule. The SQL
+# does the arithmetic either way, so the extra cost buys judgement, not maths.
 MODEL_CANDIDATES = (
-    "us.anthropic.claude-haiku-4-5-20251001-v1:0",
     "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "us.anthropic.claude-haiku-4-5-20251001-v1:0",
     "us.amazon.nova-pro-v1:0",
     "us.amazon.nova-lite-v1:0",
 )

@@ -224,3 +224,4 @@ plan.txt
 data/
 .venv/
 ui.png
+scripts/.scan-needles

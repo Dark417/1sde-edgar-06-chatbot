@@ -21,7 +21,7 @@ Recorded so nobody re-introduces them:
 | `AWS_REGION=us-east-1` | **us-east-2** — global rule 13; the UC metastore lives there |
 | gold `company_financials_current`, `filing_activity` | real tables: `financials_current`, `filing_activity_daily` (verified via `information_schema`) |
 | `get_company_filings` tool over "filing_activity + profile" | no per-company filing table exists in the export; replaced (§4) |
-| data at `s3://<serving>/v1/` | bucket `edgar-lake-serving` exists but is **empty** — repo 4's S3 export has not run. Source of truth today: `scripts/export_gold.py` → `data/*.parquet`. The store reads S3 when `SERVING_PREFIX` is set, local `data/` otherwise, same code path |
+| data at `s3://<serving>/v1/` | bucket `edgar-lake-serving` exists but is **empty** — repo 4's S3 export has not run. Source of truth today: `scripts/export_gold.py` → `data/*.parquet`. S3 mode (`SERVING_PREFIX`) is **written but untested until repo 4 ships the export** — a boto3 pre-fetch into the same local path, injected as a callable so tests stub it without moto |
 | Sonnet main / Haiku gate, ids from SSM | account cannot invoke **any Anthropic model** until the Bedrock use-case form is submitted (verified: `ResourceNotFoundException`). Model is **probed** from a candidate list; Amazon **Nova Pro/Lite work today**; SSM overrides win when set |
 | ECS Fargate service + ALB, always-on | repo 2 *is* applied (state + SSM + OIDC verified), but an always-on Fargate task + ALB ≈ $30+/month against a $10 budget alarm. Infra ships **config now (SSM/secret), compute behind `deploy_chatbot=false`** (§8) |
 | `make check` | Windows dev machine; `scripts/check.ps1` + `scripts/check.sh`, same steps in CI |
@@ -42,9 +42,10 @@ Everything else is refused with fixed text.
 | `adk` | Google ADK `LlmAgent` + `Runner` | LiteLLM `bedrock/<model>` |
 
 Tools, store, guards, prompts, and UI are shared. The seam is proven by the
-shared fake-model test suite passing under both values; if `google-adk` is not
-installed the ADK suite **skips with a stated reason** — it must never fail the
-build by absence, and never silently pass.
+shared fake-model test suite passing under both values. Locally, absence of
+`google-adk` skips-with-reason; **in CI a dedicated job installs the `adk`
+extra and runs the loop suite with skips promoted to failures** — the seam
+claim can never go green without having executed. (Architect finding #2.)
 
 ## 2. Targets
 
@@ -53,10 +54,10 @@ build by absence, and never silently pass.
 | G1 | Every numeric claim originates in a tool result; the UI shows which tools ran with args and row counts | loop tests + trace rendering test |
 | G2 | The shared loop suite passes under `AGENT_IMPL=langgraph`; and under `adk` when installed | `pytest -m loop` (parameterized) |
 | G3 | Out-of-scope → fixed `REFUSAL_TEXT`, ≤1 main-model round | boundary tests |
-| G4 | Over-broad → fixed `TOO_BROAD_TEXT` at >3 tool rounds or >8,000 tool-output tokens | guard tests |
+| G4 | Over-broad → fixed `TOO_BROAD_TEXT` at >3 tool rounds or >`TOOL_OUTPUT_CHAR_CAP` chars of tool output | loop tests |
 | G5 | Rate limits enforced: 10 msg/min and 60/day per session; global daily token budget; kill switch | guard tests |
 | G6 | Zero write paths, zero Databricks runtime dependency, DuckDB read-only with external access disabled | store tests + grep gates |
-| G7 | Local: `run.bat` → working chat at `localhost:8501` against exported data | manual §9 + smoke |
+| G7 | Local: `run.bat` → working chat at `localhost:8501` against exported data | acceptance script in SETUP-CREDENTIALS.md + `live` smoke |
 | G8 | Infra: SSM config + secret placeholder applied via repo 2 PR; compute deployable by one flag flip | terraform plan/apply |
 | G9 | Fixed responses byte-identical across impls | constants test |
 
@@ -77,7 +78,7 @@ build by absence, and never silently pass.
         │ ≤3 rounds, 8k tok cap  │  │ guard + cap     │ │
         └───────────┬────────────┘  └────────┬────────┘ │
                     └────────── shared ──────┘          │
-                    tools/ (8 typed, parameterized SQL) │
+                    tools/ (9 typed, parameterized SQL) │
                     data/store.py DuckDB read_only      │
                     ── local data/*.parquet             │
                     ── or s3://edgar-lake-serving/v1/*  │
@@ -104,42 +105,67 @@ Envelope: `{"rows", "row_count", "truncated", "caveats", "citations"}`.
 | `list_companies` | — | company_profile |
 | `search_companies` | `q: str(2..50)`, `limit<=20` | company_profile |
 | `get_company_profile` | `cik: ^\d{1,10}$` | company_profile |
-| `get_company_financials` | `cik`, `concept?: Enum(11)`, `fiscal_year?`, `limit<=50` | financials_current |
-| `compare_companies` | `concept: Enum(11)`, `fiscal_year?` | financials_current |
+| `get_company_financials` | `cik`, `concept?: Enum(derived)`, `fiscal_year?`, `limit: 1..50` | financials_current |
+| `compare_companies` | `concept: Enum(derived)`, `fiscal_year?` | financials_current |
 | `get_restatements` | `cik?`, `band?: Enum(immaterial,notable,material)`, `concept?`, `limit<=50` | restatement_event |
 | `restatement_summary` | — | restatement_event (fixed aggregates) |
 | `get_filing_activity` | `form_type?`, `limit<=60` | filing_activity_daily |
 | `get_data_coverage` | — | _manifest.json + counts |
 
-The 11 concepts (verified from live gold): `revenue_total, net_income,
-operating_income, gross_profit, assets_total, assets_current*, liabilities_total,
-equity_total, cash_and_equivalents, eps_basic, eps_diluted, shares_outstanding`
-— \*the Enum is generated **from the data at store load**, not hardcoded, and
-the schema card lists it; a hardcoded list is how the last two column-rename
-bugs happened.
+The concept Enum is generated **from the data at store load** — never
+hardcoded, not even its cardinality; a hardcoded list (or count) is how the
+last two column-rename bugs happened. The live set at design time:
+revenue_total, net_income, operating_income, gross_profit, assets_total,
+liabilities_total, equity_total, cash_and_equivalents, eps_basic, eps_diluted,
+shares_outstanding — illustrative, not normative.
 
 Removed from design1: `get_company_filings` (no per-company filing table in the
 export). Added relative to design1: `list_companies`, `compare_companies`,
 `restatement_summary` — all three proven necessary by the working prototype
 (rankings and "what do you have" are the most common questions).
 
+### 4.1 The ADK bridge (the hard part, specified)
+
+- **Fake model:** a custom `BaseLlm` subclass scripted like the LangChain fake,
+  not a LiteLLM shim, so loop tests run offline and deterministically.
+- **Sync-over-async:** one `asyncio.run(...)` per turn inside
+  `AdkRunner.run_turn`; a fresh event loop every turn (Streamlit reruns make a
+  long-lived loop a Windows trap); one `InMemorySessionService` per process,
+  sessions keyed by the same session id the UI uses.
+- **Caps:** breadth/output caps enforced in `after_tool_callback` (raises a
+  typed halt mapped to `TOO_BROAD_TEXT`); the guard check runs *before*
+  `run_turn` for both impls, not inside either framework.
+
 ## 5. Boundary policy
 
 Three layers, cheapest first:
 
-1. **Topic gate** (`TOPIC_GATE=on` default): the cheap model classifies
-   `in_scope` before the main model runs. Off-topic → `REFUSAL_TEXT`, zero main
-   tokens. When only one invocable model exists (today: Nova), gate and main
-   share it; the gate prompt is ~50 tokens either way.
+1. **Topic gate** (`TOPIC_GATE=on` default) — a *cost* gate, not a security
+   control (it shares the injectable surface). The cheap model classifies
+   `in_scope`; off-topic → `REFUSAL_TEXT`, zero main tokens. **Failure
+   policy:** unparseable output or gate exception → fail open to the main
+   model, with `gate_error` recorded in the trace; a gate failure must never
+   spend extra main-model tokens (tested). When only one invocable model
+   exists (today: Nova) gate and main share it.
 2. **Structural:** the system prompt requires answers only from tool results;
    a question no tool can serve → the model outputs exactly `OUT_OF_SCOPE`,
    which the runner maps to `REFUSAL_TEXT` (fixed text that lists what the
    system *can* answer — never a bare "I can't help").
 3. **Breadth cap:** the loop halts with `TOO_BROAD_TEXT` when a 4th tool round
-   would start or cumulative tool-output tokens exceed 8,000.
+   would start or cumulative serialized tool output exceeds
+   `TOOL_OUTPUT_CHAR_CAP = 32_000` characters — a deterministic server-side
+   measure (about 8k tokens; token counts are tokenizer-dependent and not
+   client-computable for Bedrock, so characters are what a test can assert).
 
-`REFUSAL_TEXT`, `TOO_BROAD_TEXT`, `BUDGET_TEXT`, `KILLED_TEXT`, `LIMIT_TEXT`
-are constants in `prompts.py`. They are responses, not generations, and a test
+`REFUSAL_TEXT`, `TOO_BROAD_TEXT`, `BUDGET_TEXT`, `KILLED_TEXT`, `LIMIT_TEXT`,
+**`ERROR_TEXT`** are constants in `prompts.py`. Every runner exception maps to
+`outcome=error` + `ERROR_TEXT`; the model sees only a fixed error taxonomy
+(kind: timeout / not_found / denied / invalid), never raw exception text.
+**All text leaving the system — TurnResult.text, trace fields, log lines —
+passes `redact()`** (patterns: `arn:aws:` strings, 12-digit account ids,
+`s3://` URIs, absolute file paths, `dapi` tokens, AKIA/ASIA key ids) and
+**`sanitize_markdown()`** (images stripped; links neutered unless the host is
+sec.gov — the only URLs tools emit), closing the zero-click exfil channel. They are responses, not generations, and a test
 asserts both impls emit them byte-identically. Investment advice is refused by
 the structural layer with the figures offered instead — tested.
 
@@ -154,26 +180,48 @@ the structural layer with the figures offered instead — tested.
 | conversation | 40 rounds | session | hard stop + restart hint |
 | kill switch | SSM `/edgar-lakehouse/chat/enabled` | global | checked per message, cached 30 s |
 
-In-process buckets are valid because exactly one instance runs (locally by
-definition; in cloud pinned `desired_count=1`, comment naming this section).
-Per-IP buckets exist in code but activate only behind the ALB (locally
-Streamlit cannot see a trustworthy client IP). Kill-switch lookup failure
-**fails open locally** (no AWS ≠ dead demo) and **fails closed in cloud**
-(`DEPLOY_ENV=cloud`).
+The day counter and token budget persist to `data/.budget-<UTC date>.json`
+(atomic replace), so a process restart does not refill the wallet; the budget
+is **reserved before** each model call against the remainder and settled
+after, so a single long turn cannot overshoot. In-process minute-buckets are
+valid because exactly one instance runs (locally by definition; in cloud
+pinned `desired_count=1` **and `deployment_maximum_percent=100`**, comments
+naming this section). **Fail-closed is the default**: the kill switch fails
+open only when `DEPLOY_ENV=local` is explicitly set (run.bat sets it); any
+other value, including unset, fails closed — the dangerous direction is never
+the default. Per-IP buckets activate only behind the ALB.
 
-Every message logs one structured line: session hash, impl, model id, tools
-called, token counts, outcome. No question text is logged (it is user data).
+Every message logs one structured line: session hash, impl, model id, tool
+**names and arg hashes** (free-text args are sha256-truncated —
+resolve_company's argument IS the question, so logging it verbatim would
+defeat the no-question-text rule), token counts, outcome. All log lines pass
+`redact()`.
 
 ## 7. Security constraints
 
-- **SEC1** DuckDB `read_only` semantics: views over Parquet; after registration
-  `SET enable_external_access=false`; tests prove `INSERT`, `ATTACH`, and
-  `COPY TO` raise.
+- **SEC1** DuckDB hardening, the *real* mechanism (lazy views + external-access-off
+  is self-contradictory; both reviews caught it): the store **materializes**
+  every table (`CREATE TABLE t AS SELECT * FROM read_parquet(...)`) in a build
+  step, then hardens the same connection: `SET enable_external_access=false`,
+  `SET disabled_filesystems='LocalFileSystem'`, `SET lock_configuration=true`.
+  Refresh = build a new connection, harden, atomically swap. S3 mode never
+  touches httpfs: objects are fetched with boto3 into the local data dir
+  *before* the build step, then the same path flows. Tests prove: queries
+  still work *after* hardening; INSERT/ATTACH/COPY/LOAD-httpfs raise;
+  `current_setting('enable_external_access')` is false; grep gate: `httpfs`
+  appears nowhere in `src/`.
 - **SEC2** No model-authored SQL anywhere. CI greps tool sources for f-strings
   containing `SELECT` — zero.
-- **SEC3** Tool results enter the conversation wrapped in `<tool_data>` tags;
-  the system prompt declares such content data, never instructions. Company
-  names are attacker-influenced text; free-text fields capped at 200 chars.
+- **SEC3** Injection hardening that is mechanism, not theatre: tool results
+  are serialized as **JSON only** with angle brackets escaped in every string
+  value, wrapped in a **per-turn nonce delimiter** so data cannot forge a
+  closing tag; a test asserts exactly one closing delimiter per block.
+  **Tools never interpolate user input into caveats** — caveats are fixed
+  codes; the renderer, not the model, restates queries. Free-text fields
+  capped at 200 chars. The proving test is a live canary: a fixture company
+  whose name embeds a fake closing tag plus a print-CANARY instruction, and
+  the same payload as a user query, asserting the canary never surfaces and
+  no out-of-registry tool runs.
 - **SEC4** AWS auth is ambient (SSO locally, task role in cloud). No AWS keys
   in code, env files, or Streamlit secrets. The only secret material the app
   can ever read is the optional Anthropic key at

@@ -1,9 +1,8 @@
 """Pull the gold tables out of Databricks into local Parquet.
 
-This stands in for repo 4's S3 serving export, which has not run yet. The point
-is the same and the app is built against the same shape: once the files exist
-the chatbot never talks to Databricks again, so a Free Edition quota shutdown
-cannot take the demo down (design doc section 5.4).
+This stands in for repo 4's S3 serving export, which has not run yet. Once the
+files exist the chatbot never talks to Databricks again, so a Free Edition
+quota shutdown cannot take the demo down (docs/20-agent-system.md section 0).
 
 Uses the SQL Statement REST API directly rather than `databricks-sql-connector`
 or the SDK -- repo 6 forbids both as runtime dependencies, and this script is
@@ -29,9 +28,8 @@ import pyarrow.parquet as pq
 
 DATA_DIR = Path(__file__).parents[1] / "data"
 
-# Views are included deliberately: v_financials_latest and v_restatement_history
-# are the shapes the tools actually want, and re-deriving them client-side would
-# be exactly the "transformation in the serving layer" the design forbids.
+# The four gold base tables the tools consume. (Gold views are not exported;
+# the tools' aggregates run over these.)
 TABLES = [
     "gold.company_profile",
     "gold.financials_current",
@@ -52,13 +50,48 @@ def _config() -> tuple[str, str, str]:
             f"missing required environment variable(s): {', '.join(missing)}\n"
             "Set them from your gitignored local config; see docs/LOCAL-VALUES.example.md."
         )
-    if not host.startswith("http"):
-        host = f"https://{host}"
-    return host, token, warehouse
+    # Security (review finding #7): this request carries a live PAT in the
+    # Authorization header. Force https and pin the host to Databricks; an
+    # http:// value or a foreign host must die here, not send the token.
+    host = host.replace("http://", "").replace("https://", "")
+    from urllib.parse import urlparse
+
+    parsed = urlparse(f"https://{host}")
+    if not (parsed.hostname or "").endswith(".cloud.databricks.com"):
+        sys.exit(
+            f"DBX_HOST {parsed.hostname!r} is not a *.cloud.databricks.com host - refusing "
+            "to send the PAT anywhere else."
+        )
+    return f"https://{parsed.hostname}", token, warehouse
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    # A redirect would replay the Authorization header at whatever host the
+    # 30x names. There is no legitimate redirect in this API; refuse them all.
+    def redirect_request(self, *args, **kwargs):  # type: ignore[override]
+        raise urllib.error.HTTPError(args[3].full_url if len(args) > 3 else "", 302,
+                                     "redirect refused (would leak the PAT)", {}, None)
+
+
+_OPENER = urllib.request.build_opener(_NoRedirect)
+
+_CHUNK_RE = None  # compiled lazily
+
+
+def _open(req: urllib.request.Request, timeout: int = 120):
+    try:
+        return _OPENER.open(req, timeout=timeout)
+    except urllib.error.HTTPError as e:
+        body = e.read().decode(errors="replace")[:200] if e.fp else ""
+        sys.exit(f"Databricks API error {e.code}: {body}")
 
 
 def query(sql: str) -> tuple[list[str], list[list], list[str]]:
     """Run one statement, returning (column names, rows, column type names)."""
+    import re
+    global _CHUNK_RE
+    if _CHUNK_RE is None:
+        _CHUNK_RE = re.compile(r"^/api/2\.0/sql/statements/[A-Za-z0-9_-]+/result/chunks/\d+")
     host, token, warehouse = _config()
     body = json.dumps(
         {"statement": sql, "warehouse_id": warehouse, "wait_timeout": "50s", "format": "JSON_ARRAY"}
@@ -68,7 +101,7 @@ def query(sql: str) -> tuple[list[str], list[list], list[str]]:
         data=body,
         headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=120) as r:
+    with _open(req) as r:
         payload = json.load(r)
 
     # A statement can come back PENDING; poll rather than assume it finished.
@@ -82,7 +115,7 @@ def query(sql: str) -> tuple[list[str], list[list], list[str]]:
             f"{host}/api/2.0/sql/statements/{statement_id}",
             headers={"Authorization": f"Bearer {token}"},
         )
-        with urllib.request.urlopen(poll, timeout=120) as r:
+        with _open(poll) as r:
             payload = json.load(r)
 
     status = payload.get("status", {})
@@ -97,10 +130,12 @@ def query(sql: str) -> tuple[list[str], list[list], list[str]]:
     # Pagination: large results arrive in chunks.
     next_chunk = payload.get("result", {}).get("next_chunk_internal_link")
     while next_chunk:
+        if not _CHUNK_RE.match(next_chunk):
+            sys.exit(f"unexpected chunk link shape, refusing to follow: {next_chunk[:80]!r}")
         req = urllib.request.Request(
             f"{host}{next_chunk}", headers={"Authorization": f"Bearer {token}"}
         )
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with _open(req) as r:
             chunk = json.load(r)
         rows.extend(chunk.get("data_array") or [])
         next_chunk = chunk.get("next_chunk_internal_link")

@@ -90,9 +90,7 @@ class GoldStore:
             path = (self.data_dir / f"{table}.parquet").as_posix()
             # Constant table names from GOLD_TABLES, parquet path parameterized;
             # concatenation (not an f-string) keeps the no-fstring-SQL gate honest.
-            build.execute(
-                "CREATE TABLE " + table + " AS SELECT * FROM read_parquet(?)", [path]
-            )
+            build.execute("CREATE TABLE " + table + " AS SELECT * FROM read_parquet(?)", [path])
         build.close()
 
         con = duckdb.connect(str(db_path), read_only=True)  # INSERT now raises
@@ -101,9 +99,7 @@ class GoldStore:
 
         manifest_path = self.data_dir / "_manifest.json"
         self.manifest = (
-            json.loads(manifest_path.read_text(encoding="utf-8"))
-            if manifest_path.exists()
-            else {}
+            json.loads(manifest_path.read_text(encoding="utf-8")) if manifest_path.exists() else {}
         )
         rows = con.execute(
             "SELECT DISTINCT concept_canonical FROM financials_current "

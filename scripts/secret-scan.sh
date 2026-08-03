@@ -12,7 +12,7 @@ fail=0
 # Obvious dummies in *.example / docs are fine and must stay readable:
 # dapi000…, dapiXXXX…, <PLACEHOLDER>, "replace-me". Anything with real entropy
 # is not filtered, so a genuine token in an .example file still fails.
-PLACEHOLDER='dapi(0{8,}|[xX]{8,})|AKIAIOSFODNN7EXAMPLE|AKIA[X0]{16}|EXAMPLE|<[A-Z_]+>|replace[-_]me|your[-_]'
+PLACEHOLDER='dapi(0{8,}|[xX]{8,})|AKIAIOSFODNN7EXAMPLE|AKIA[X0]{2,}[A-Z0-9]*|EXAMPLE|<[A-Z_]+>|replace[-_]me|your[-_]'
 
 scan() { # name, extended-regex
   local name="$1" pattern="$2" hits

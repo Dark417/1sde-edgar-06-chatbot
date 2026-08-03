@@ -26,7 +26,7 @@ def test_redact_strips_everything_the_reviews_listed() -> None:
     synthetic = (
         "AccessDeniedException: User arn:aws:sts::123456789012:assumed-role/X/y "
         "cannot read s3://some-bucket/key at C:\\Users\\dev\\proj\\f.py or "
-        "/home/dev/f.py with dapi0123456789abcdef and AKIAABCDEFGHIJKLMNOP"
+        "/home/dev/f.py with dapi00000000000000000000 and AKIAX0X0X0X0X0X0X0X0"
     )
     out = redact(synthetic)
     for leak in (
@@ -35,8 +35,8 @@ def test_redact_strips_everything_the_reviews_listed() -> None:
         "s3://",
         "C:\\Users",
         "/home/dev",
-        "dapi0123456789abcdef",
-        "AKIAABCDEFGHIJKLMNOP",
+        "dapi00000000000000000000",
+        "AKIAX0X0X0X0X0X0X0X0",
     ):
         assert leak not in out, leak
     assert "[arn-redacted]" in out and "[s3-redacted]" in out

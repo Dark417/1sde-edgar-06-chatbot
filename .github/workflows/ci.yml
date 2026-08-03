@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: ruff check . && ruff format --check .
+      - run: mypy --strict src/
+      - name: tests + coverage gate
+        env:
+          DEPLOY_ENV: local
+        run: pytest -m "not live" --cov=src/finchat --cov-fail-under=85
+      - name: secret scan (needles come from CI, never from git)
+        run: |
+          if [ -n "${{ secrets.SCAN_NEEDLES }}" ]; then
+            printf '%s\n' "${{ secrets.SCAN_NEEDLES }}" > scripts/.scan-needles
+          fi
+          bash scripts/secret-scan.sh
+
+  # The seam job (architect finding #2): installs the adk extra and runs the
+  # loop suite with skips PROMOTED TO FAILURES. G2 cannot go green unexecuted.
+  adk-seam:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -e ".[dev,adk]"
+      - name: adk loop suite, no skips allowed
+        env:
+          DEPLOY_ENV: local
+          AGENT_IMPL: adk
+        run: pytest -m loop -rs --strict-markers -p no:cacheprovider
+      - name: fail if anything was skipped
+        env:
+          DEPLOY_ENV: local
+          AGENT_IMPL: adk
+        run: |
+          out=$(pytest -m loop -rs -q -p no:cacheprovider 2>&1 | tail -3)
+          echo "$out"
+          echo "$out" | grep -qi "skipped" && exit 1 || true

@@ -8,9 +8,10 @@ step says what it unlocks and how to verify it worked.
 | Thing | State |
 |---|---|
 | AWS SSO profile `edgar-sso` | working; `aws sso login --profile edgar-sso`, or double-click `D:\aws-login.bat` |
-| SSM config `/edgar-lakehouse/chat/*` | applied by repo 2 (`enabled=true`, `model/main=probe`, `model/cheap=probe`, `token_budget_day=200000`) |
+| SSM config `/edgar-lakehouse/chat/*` | applied by repo 2 v0.4.0 (`enabled=true`, `model/main=`Sonnet 4.5, `model/cheap=`Haiku 4.5, `token_budget_day=200000`) |
 | Secret container `/edgar-lakehouse/chat/anthropic_api_key` | exists, holds `PLACEHOLDER-set-me` |
-| Amazon Nova (Bedrock) | invocable today — the app runs on it with zero further setup |
+| Claude on Bedrock | Sonnet 4.5 / Haiku 4.5 / Opus 4.5 all invocable; Nova stays as the fallback |
+| CI OIDC role `1sde-edgar-06-chatbot-ci` | created by repo 2 v0.4.0, with a scoped `bedrock:InvokeModel` policy |
 
 ## 1. Run it locally (works right now)
 
@@ -29,35 +30,47 @@ $env:DBX_TOKEN = "<pat>"
 .venv\Scripts\python scripts\export_gold.py
 ```
 
-## 2. 🔴 Unlock Claude on Bedrock (the "API key" for the main path)
+## 2. ✅ Claude on Bedrock — DONE for this account, nothing to do
 
-Bedrock needs **no API key** — auth is your AWS identity. What it needs is
-one-time **model access** plus, for Anthropic models, a **use-case form**
-(this account currently gets `ResourceNotFoundException: Model use case
-details have not been submitted` on every Claude model — verified).
+Bedrock needs **no API key**: auth is your AWS identity, so the `edgar-sso`
+profile is the credential. Anthropic models additionally require a one-time
+**use-case form** per account.
 
-1. Sign in (aws-login.bat) → Bedrock console, region **us-east-2**:
-   `https://us-east-2.console.aws.amazon.com/bedrock/home?region=us-east-2#/modelaccess`
-2. **Model access → Modify model access** → tick the Anthropic Claude models
-   (Haiku 4.5 and Sonnet 4.5 at minimum) → Next.
-3. The **Anthropic use-case form** appears inline: company/use-case questions.
-   Fill honestly: personal portfolio project, financial-data Q&A over public
-   SEC filings, no end users' PII. Submit.
-4. Access usually flips to "Access granted" within minutes; retry after ~15 if
-   not.
-5. Verify:
-   ```powershell
-   aws bedrock-runtime converse --model-id "us.anthropic.claude-haiku-4-5-20251001-v1:0" `
-     --messages '[{\"role\":\"user\",\"content\":[{\"text\":\"say OK\"}]}]' `
-     --inference-config '{\"maxTokens\":5}' --profile edgar-sso --region us-east-2
-   ```
-6. **No code change needed**: the app probes Claude first and upgrades itself
-   on the next start. To pin instead of probe:
-   ```powershell
-   aws ssm put-parameter --name /edgar-lakehouse/chat/model/main `
-     --value "us.anthropic.claude-haiku-4-5-20251001-v1:0" --overwrite `
-     --profile edgar-sso --region us-east-2
-   ```
+**That form was submitted and approved on 2026-08-02.** Verified invocable in
+the project account, us-east-2: Claude **Sonnet 4.5**, **Haiku 4.5** and
+**Opus 4.5**. The model is now pinned to Sonnet 4.5 in SSM by repo 2, so the
+app no longer probes on startup. There is nothing for you to click.
+
+<details><summary>If you ever set this up in a fresh AWS account</summary>
+
+The old **Model access** page is retired — serverless models now enable
+themselves on first invocation. The Anthropic gate lives on the **Model
+catalog** page instead:
+
+1. Bedrock console, region **us-east-2** → **Model catalog**.
+2. Banner at the top: **"Submit use case details"**.
+3. Fill it honestly — company/website, industry, intended users, and a
+   description of the use case. For this project: an individual developer's
+   portfolio demo doing financial-data Q&A over public SEC filings, low
+   volume, no PII.
+4. Approval took under 15 minutes. Until it lands, every Claude model returns
+   `ResourceNotFoundException: Model use case details have not been submitted`,
+   and the app silently falls back to Amazon Nova (which needs no form).
+</details>
+
+Verify at any time:
+```powershell
+aws bedrock-runtime converse --model-id "us.anthropic.claude-sonnet-4-5-20250929-v1:0" `
+  --messages '[{\"role\":\"user\",\"content\":[{\"text\":\"say OK\"}]}]' `
+  --inference-config '{\"maxTokens\":5}' --profile edgar-sso --region us-east-2
+```
+
+To pin a model instead of probing (skips one round trip at startup):
+```powershell
+aws ssm put-parameter --name /edgar-lakehouse/chat/model/main `
+  --value "us.anthropic.claude-sonnet-4-5-20250929-v1:0" --overwrite `
+  --profile edgar-sso --region us-east-2
+```
 
 ## 3. Optional — direct Anthropic API key (fallback path, placeholder today)
 

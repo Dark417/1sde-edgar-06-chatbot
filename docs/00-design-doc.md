@@ -1,3 +1,8 @@
+> **Context copy for repo 6.** The authoritative original lives in
+> `1sde-edgar-01-contracts/docs/` and evolves there; live table shapes
+> are introspected from the warehouse (see `20-agent-system.md` §0/§4).
+> Do not edit here.
+
 # Design Doc — edgar lakehouse
 
 > **Authoritative.** The five repo `AGENTS.md` files derive from this document and

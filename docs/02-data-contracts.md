@@ -1,3 +1,8 @@
+> **Context copy for repo 6.** The authoritative original lives in
+> `1sde-edgar-01-contracts/docs/` and evolves there; live table shapes
+> are introspected from the warehouse (see `20-agent-system.md` §0/§4).
+> Do not edit here.
+
 # Data Contracts — edgar lakehouse
 
 > **Authoritative.** Every column, type, and nullability in the five repos comes from

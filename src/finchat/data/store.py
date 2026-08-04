@@ -37,20 +37,32 @@ Fetcher = Callable[[str, Path], None]  # (serving_prefix, dest_dir) -> None
 
 
 def s3_fetch(serving_prefix: str, dest: Path) -> None:
-    """Download gold objects with boto3 (the extension route stays banned).
+    """Download repo 4's serving export with boto3 (the extension route stays banned).
 
-    UNTESTED against real S3 until repo 4 ships the export — the bucket is
-    empty today. The seam exists so tests stub it and activation is one env
-    var.
+    This is now the only source of gold data. It used to be a fallback behind
+    ``scripts/export_gold.py``, which read Databricks directly and wrote the same
+    filenames locally; that script has been removed. It was written when repo 4's
+    export did not exist, and once it did, keeping both meant two producers of one
+    dataset -- the exact duplication cross-repo law 1 exists to prevent. Repo 4 owns
+    the export; this repo consumes it.
+
+    **The layout is nested, not flat.** Repo 4 publishes
+    ``v1/<table>/data.parquet``, one directory per table. This function previously
+    asked for ``v1/<table>.parquet`` and would have 404'd on every table -- it was
+    marked untested against real S3 precisely because the bucket was empty when it
+    was written. The local filenames stay flat, because that is what ``_build``
+    and the tests expect.
     """
     import boto3
 
     bucket_key = serving_prefix.removeprefix("s3://")
     bucket, _, prefix = bucket_key.partition("/")
+    base = prefix.rstrip("/")
     client = boto3.client("s3")
     dest.mkdir(parents=True, exist_ok=True)
-    for name in (*[f"{t}.parquet" for t in GOLD_TABLES], "_manifest.json"):
-        client.download_file(bucket, f"{prefix.rstrip('/')}/{name}", str(dest / name))
+    for table in GOLD_TABLES:
+        client.download_file(bucket, f"{base}/{table}/data.parquet", str(dest / f"{table}.parquet"))
+    client.download_file(bucket, f"{base}/_manifest.json", str(dest / "_manifest.json"))
 
 
 class GoldStore:
@@ -81,7 +93,9 @@ class GoldStore:
         if missing:
             raise FileNotFoundError(
                 f"gold export missing from {self.data_dir}: {', '.join(missing)}. "
-                "Run scripts/export_gold.py first (see docs/SETUP-CREDENTIALS.md)."
+                "Set SERVING_PREFIX to repo 4's export (s3://<serving-bucket>/v1) so the "
+                "store can fetch it, or point DATA_DIR at a local copy. Repo 4 owns "
+                "this data; this repo no longer produces its own."
             )
 
         db_path = self.data_dir / f".gold-{uuid.uuid4().hex[:8]}.duckdb"

@@ -39,7 +39,10 @@ framework, is the thing being demonstrated.
 
 ### Owns
 - The tool layer, guards, prompts, store, both agent runners, Streamlit UI.
-- `scripts/export_gold.py` — the stand-in for repo 4's S3 export.
+- Gold data comes from repo 4's export at `s3://<serving-bucket>/v1/`, fetched by
+  `s3_fetch` in `src/finchat/data/store.py`. This repo produces no gold data of its
+  own; `scripts/export_gold.py` was removed once repo 4's export went live, because
+  two producers of one dataset is the duplication law 1 forbids.
 - Its own SSM namespace `/edgar-lakehouse/chat/*` and the
   `modules/chatbot` footprint in repo 2 (config + flagged-off compute).
 
@@ -77,7 +80,7 @@ finally: re-run scripts/check.ps1 end-to-end; paste output in PROGRESS.md
 
 ## 3. Non-negotiable rules
 
-1. **No Databricks import in the app.** `export_gold.py` is the only file that
+1. **No Databricks import anywhere.** Nothing in this repo talks to the warehouse; it
    may reach Databricks, over plain HTTPS. Enforced by structural test.
 2. **The model never computes a number.** Tools compute; the model narrates.
 3. **All SQL parameterized; LIMIT server-side.** Grep-gated: no f-string SELECT.

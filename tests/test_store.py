@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pathlib
 import threading
 from pathlib import Path
 
@@ -43,8 +44,42 @@ def test_reading_new_parquet_after_hardening_raises(store: GoldStore, fixture_di
 
 
 def test_missing_data_dir_names_the_fix(tmp_path: Path) -> None:
-    with pytest.raises(FileNotFoundError, match="export_gold.py"):
+    """The error must name repo 4's export, not the script that used to produce one."""
+    with pytest.raises(FileNotFoundError, match="SERVING_PREFIX"):
         GoldStore(tmp_path)
+
+
+def test_s3_fetch_asks_for_repo4s_nested_layout(tmp_path: Path) -> None:
+    """Repo 4 publishes v1/<table>/data.parquet, not v1/<table>.parquet.
+
+    This asked for the flat form and would have 404'd on every table. It was never
+    caught because the bucket was empty when it was written, so "untested against
+    real S3" was doing a lot of work in the docstring.
+    """
+    asked: list[str] = []
+
+    class FakeClient:
+        def download_file(self, bucket: str, key: str, dest: str) -> None:
+            asked.append(key)
+            pathlib.Path(dest).write_bytes(b"")
+
+    import finchat.data.store as store_mod
+
+    original = store_mod.boto3 if hasattr(store_mod, "boto3") else None
+    import sys
+    import types
+
+    fake_boto3 = types.SimpleNamespace(client=lambda _svc: FakeClient())
+    sys.modules["boto3"] = fake_boto3
+    try:
+        store_mod.s3_fetch("s3://a-bucket/v1", tmp_path)
+    finally:
+        if original is None:
+            sys.modules.pop("boto3", None)
+
+    assert "v1/financials_current/data.parquet" in asked
+    assert "v1/_manifest.json" in asked
+    assert not any(k.endswith("financials_current.parquet") for k in asked)
 
 
 def test_manifest_and_derived_concepts(store: GoldStore) -> None:

@@ -19,7 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 adk = ["google-adk>=1.0", "litellm>=1.40"]
-# pyarrow writes the Parquet in scripts/export_gold.py. It is NOT a runtime
+# pyarrow reads the Parquet repo 4 exports. It is NOT a runtime
 # dependency: nothing under src/ imports it, and DuckDB reads Parquet natively.
 # Keeping it in the runtime set put ~20 MB and a large wheel on every deploy
 # for a module the app never loads.

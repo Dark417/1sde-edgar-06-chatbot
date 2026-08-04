@@ -17,7 +17,7 @@ PROBE_SENTINEL = "probe"  # SSM forbids empty values; this means "probe candidat
 
 # Quality-ordered; first invocable wins. The Anthropic use-case form was
 # submitted and approved on 2026-08-02, so the Claude entries are live in
-# account 806 (us-east-2); the Nova entries remain as a working fallback for a
+# this account (us-east-2); the Nova entries remain as a working fallback for a
 # fresh account that has not been through that form yet.
 #
 # Sonnet leads rather than Haiku: the model's job here is to pick tools and
@@ -74,6 +74,12 @@ class Settings:
     token_budget_day: int = 200_000
     topic_gate: bool = True
     region: str = "us-east-2"
+    # Sidebar links. Config, not code, so a slide deck or write-up can be
+    # attached after the fact without a deploy: set LINK_* env vars, or the
+    # matching SSM parameter under /edgar-lakehouse/chat/link/. A link left
+    # empty is not rendered at all, so an unfinished deck never ships a dead
+    # URL -- which is worse than no link.
+    links: dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def load(cls) -> Settings:
@@ -88,7 +94,34 @@ class Settings:
         )
         s.topic_gate = resolve("TOPIC_GATE", None, "on") == "on"
         s.region = resolve("AWS_REGION", None, "us-east-2")
+        s.links = {
+            label: url
+            for label, env, ssm in (
+                ("Source code", "LINK_REPO", f"{SSM_PREFIX}/link/repo"),
+                ("How it works", "LINK_ARCHITECTURE", f"{SSM_PREFIX}/link/architecture"),
+                ("Demo / slides", "LINK_DEMO", f"{SSM_PREFIX}/link/demo"),
+                ("Write-up", "LINK_WRITEUP", f"{SSM_PREFIX}/link/writeup"),
+            )
+            if (url := resolve(env, ssm, "").strip())
+        }
         return s
+
+
+# botocore raises these when the caller cannot be authenticated at all. They
+# say nothing about which models exist, so they must not be reported as model
+# access. Matched by class name to avoid importing botocore just for this.
+_CREDENTIAL_ERRORS = frozenset(
+    {
+        "TokenRetrievalError",
+        "UnauthorizedSSOTokenError",
+        "SSOTokenLoadError",
+        "NoCredentialsError",
+        "CredentialRetrievalError",
+        "ExpiredTokenException",
+        "InvalidClientTokenId",
+        "UnrecognizedClientException",
+    }
+)
 
 
 def pick_model(client: Any, pinned: str) -> str:
@@ -109,9 +142,28 @@ def pick_model(client: Any, pinned: str) -> str:
             )
             return candidate
         except Exception as exc:
-            errors.append(f"{candidate.rsplit('.', 1)[-1]}: {type(exc).__name__}")
+            name = type(exc).__name__
+            # A credential failure is NOT a model-access failure, and reporting
+            # it as one sends you to the Bedrock console to fix something that
+            # is not broken. Observed for real: an expired SSO token produced
+            # "no invocable Bedrock model in this account/region", listing four
+            # models that were all perfectly available.
+            #
+            # Credential errors are identical for every candidate, so the first
+            # one is the whole story -- fail immediately rather than probing
+            # three more times to collect the same message.
+            if name in _CREDENTIAL_ERRORS:
+                raise RuntimeError(
+                    f"AWS credentials are not usable ({name}): {exc}. "
+                    "This is a sign-in problem, not model access - the models "
+                    "may be fine. Run `aws sso login --profile edgar-sso` "
+                    "(or double-click D:\\aws-login.bat) and restart. On a "
+                    "server, check the instance role."
+                ) from exc
+            errors.append(f"{candidate.rsplit('.', 1)[-1]}: {name}")
     raise RuntimeError(
         "no invocable Bedrock model in this account/region. Tried: "
         + "; ".join(errors)
-        + ". See docs/SETUP-CREDENTIALS.md."
+        + ". Credentials worked, so this is model access: see "
+        "docs/SETUP-CREDENTIALS.md section 2."
     )

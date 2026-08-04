@@ -96,6 +96,11 @@ def main() -> None:  # pragma: no cover - streamlit script body
         ]:
             st.metric(label, f"{counts.get(key, 0):,}")
         st.caption(f"Exported {str(store.manifest.get('generated_at', 'unknown'))[:19]}")
+        if settings.links:
+            st.divider()
+            for label, url in settings.links.items():
+                st.link_button(label, url, use_container_width=True)
+
         st.divider()
         st.caption(
             "The model never calculates: every figure comes from a fixed SQL tool, "

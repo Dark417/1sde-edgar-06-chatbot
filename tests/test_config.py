@@ -60,3 +60,43 @@ def test_probe_exhaustion_names_setup_doc() -> None:
 
     with pytest.raises(RuntimeError, match="SETUP-CREDENTIALS"):
         config.pick_model(Dead(), config.PROBE_SENTINEL)
+
+
+class _Boom:
+    """A bedrock client whose converse always raises a chosen exception type."""
+
+    def __init__(self, exc_name: str, message: str = "boom") -> None:
+        self.exc = type(exc_name, (Exception,), {})(message)
+
+    def converse(self, **_: object) -> dict:
+        raise self.exc
+
+
+def test_credential_failure_is_not_reported_as_model_access() -> None:
+    """An expired token must not send you to the Bedrock console.
+
+    Observed for real: an expired SSO session produced "no invocable Bedrock
+    model in this account/region" listing four models that were all available.
+    """
+    from finchat.config import PROBE_SENTINEL, pick_model
+
+    with pytest.raises(RuntimeError) as ei:
+        pick_model(_Boom("TokenRetrievalError"), PROBE_SENTINEL)
+
+    msg = str(ei.value)
+    assert "sign-in problem" in msg
+    assert "aws sso login" in msg
+    assert "no invocable Bedrock model" not in msg, "still blaming model access"
+
+
+def test_model_access_failure_still_names_the_models() -> None:
+    """When credentials are fine, the model list is the useful diagnosis."""
+    from finchat.config import PROBE_SENTINEL, pick_model
+
+    with pytest.raises(RuntimeError) as ei:
+        pick_model(_Boom("ResourceNotFoundException"), PROBE_SENTINEL)
+
+    msg = str(ei.value)
+    assert "no invocable Bedrock model" in msg
+    assert "ResourceNotFoundException" in msg
+    assert "Credentials worked" in msg

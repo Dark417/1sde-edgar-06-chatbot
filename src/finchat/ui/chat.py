@@ -88,7 +88,7 @@ def main() -> None:  # pragma: no cover - streamlit script body
             index=0 if settings.agent_impl == "langgraph" else 1,
         )
         st.caption(f"Model: `{ctx['model_id'].rsplit('.', 1)[-1]}`")
-        counts = store.manifest.get("row_counts", {})
+        counts = store.row_counts
         for label, key in [
             ("Companies", "company_profile"),
             ("Facts", "financials_current"),

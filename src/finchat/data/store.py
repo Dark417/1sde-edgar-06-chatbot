@@ -123,6 +123,32 @@ class GoldStore:
         self._db_path = db_path
         return con
 
+    @property
+    def row_counts(self) -> dict[str, int]:
+        """``{table: row_count}`` from repo 4's manifest, whatever shape it is in.
+
+        Repo 4 publishes a ``tables`` LIST of ``{name, row_count, bytes, sha256}``.
+        The UI used to read ``manifest["row_counts"]``, a flat dict that repo 4 has
+        never emitted -- so the lookup returned {} and the sidebar showed 0
+        companies, 0 facts, 0 restatements against a fully loaded database. The
+        tests did not catch it because the fixture invented the flat shape rather
+        than copying a real manifest, so both sides of the mismatch agreed with
+        each other and disagreed with production.
+
+        Normalising here rather than in the UI keeps the manifest's on-disk shape a
+        detail of the layer that reads the export. The flat form is still accepted
+        so an older manifest does not break the page.
+        """
+        tables = self.manifest.get("tables")
+        if isinstance(tables, list):
+            return {
+                str(t["name"]): int(t.get("row_count", 0))
+                for t in tables
+                if isinstance(t, dict) and "name" in t
+            }
+        legacy = self.manifest.get("row_counts")
+        return dict(legacy) if isinstance(legacy, dict) else {}
+
     # -- query -----------------------------------------------------------------
 
     def q(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:

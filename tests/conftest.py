@@ -119,9 +119,25 @@ def fixture_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
         d / "filing_activity_daily.parquet",
     )
 
+    # Repo 4's REAL manifest shape: a `tables` list, not a `row_counts` dict.
+    # Copied from an actual s3://<serving-bucket>/v1/_manifest.json. The previous
+    # fixture invented the flat dict, which made the sidebar's lookup agree with
+    # the test and disagree with production -- the page showed 0 companies, 0
+    # facts and 0 restatements over a fully loaded database. A fixture that
+    # guesses the producer's format tests only that this repo is self-consistent.
     (d / "_manifest.json").write_text(
         json.dumps(
-            {"generated_at": "2026-08-03T00:00:00+00:00", "row_counts": {"company_profile": 3}}
+            {
+                "generated_at": "2026-08-03T00:00:00+00:00",
+                "manifest_version": "1",
+                "logical_date": "2026-08-02",
+                "tables": [
+                    {"name": "company_profile", "row_count": 3, "bytes": 1, "path": "x"},
+                    {"name": "financials_current", "row_count": 4, "bytes": 1, "path": "x"},
+                    {"name": "restatement_event", "row_count": 1, "bytes": 1, "path": "x"},
+                    {"name": "filing_activity_daily", "row_count": 2, "bytes": 1, "path": "x"},
+                ],
+            }
         ),
         encoding="utf-8",
     )

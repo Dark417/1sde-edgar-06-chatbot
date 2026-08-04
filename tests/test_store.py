@@ -83,9 +83,32 @@ def test_s3_fetch_asks_for_repo4s_nested_layout(tmp_path: Path) -> None:
 
 
 def test_manifest_and_derived_concepts(store: GoldStore) -> None:
-    assert store.manifest["row_counts"]["company_profile"] == 3
+    assert store.row_counts["company_profile"] == 3
     assert "revenue_total" in store.concepts
     assert "eps_basic" in store.concepts
+
+
+def test_row_counts_reads_repo4s_table_list(store: GoldStore) -> None:
+    """The sidebar's numbers, against the shape repo 4 actually publishes.
+
+    Guards the bug this replaced: every count silently 0 on a loaded database,
+    because the UI read a `row_counts` key that no real manifest contains.
+    """
+    assert store.row_counts == {
+        "company_profile": 3,
+        "financials_current": 4,
+        "restatement_event": 1,
+        "filing_activity_daily": 2,
+    }
+
+
+def test_row_counts_survives_a_manifest_it_cannot_read(store: GoldStore) -> None:
+    """Missing or malformed manifest costs the metrics, never the page."""
+    for bad in ({}, {"tables": "nonsense"}, {"tables": [{"row_count": 5}]}):
+        store.manifest = bad
+        assert store.row_counts == {}
+    store.manifest = {"row_counts": {"company_profile": 9}}  # legacy flat form
+    assert store.row_counts == {"company_profile": 9}
 
 
 def test_refresh_single_flight(store: GoldStore) -> None:

@@ -19,6 +19,18 @@ from finchat.prompts import (
 
 log = logging.getLogger("finchat")
 
+# Every one of these is answerable from the loaded export. That is the whole
+# point: a suggested question the dataset cannot answer produces a correct
+# refusal that a first-time visitor reads as a broken product. Between them they
+# cover the three things the agent can do -- list what exists, rank across
+# companies, and compare an original figure against its restatement.
+SAMPLE_QUESTIONS = (
+    "What companies do you have data on?",
+    "Which company had the biggest material restatement?",
+    "What was Apple's most recently reported revenue?",
+    "Which restatements were filed more than a year after the original?",
+)
+
 GUARD_TEXTS = {
     "limit": LIMIT_TEXT,
     "daily": LIMIT_TEXT,
@@ -140,7 +152,29 @@ def main() -> None:  # pragma: no cover - streamlit script body
                     for line in trace:
                         st.markdown(line)
 
-    if prompt := st.chat_input("Ask about the data…"):
+    # Sample questions, first turn only. An empty chat box is the hardest moment
+    # for a visitor who does not know what this dataset contains -- and asking
+    # for something that is not in it ("What was Tesla's revenue?") produces a
+    # correct refusal that reads like a broken demo. These four are all
+    # answerable from the eight companies loaded, and between them exercise the
+    # lookup, the ranking and the restatement comparison.
+    #
+    # They disappear once a conversation exists: they are a starting point, not
+    # a permanent toolbar competing with the thing the visitor just typed.
+    if not st.session_state.history:
+        st.caption("Try one of these:")
+        cols = st.columns(2)
+        for i, question in enumerate(SAMPLE_QUESTIONS):
+            if cols[i % 2].button(question, key=f"sample-{i}", use_container_width=True):
+                st.session_state.pending = question
+                st.rerun()
+
+    # chat_input is evaluated unconditionally, not short-circuited behind the
+    # pending question: `pending or st.chat_input(...)` would skip rendering the
+    # widget on the run that consumes a sample, and the input box would vanish
+    # for exactly the turn the visitor is watching.
+    typed = st.chat_input("Ask about the data…")
+    if prompt := st.session_state.pop("pending", None) or typed:
         st.session_state.history.append(("user", prompt, []))
         with st.chat_message("user"):
             st.markdown(prompt)

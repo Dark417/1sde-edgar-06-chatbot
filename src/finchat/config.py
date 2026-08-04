@@ -101,7 +101,7 @@ class Settings:
                 # First in the dict so it renders at the top of the sidebar: it
                 # is the way back out of the assistant, and a visitor who lands
                 # on /chat first has no other route to the tables and filings.
-                ("Browse the data", "LINK_SITE", f"{SSM_PREFIX}/link/site"),
+                ("Main Page", "LINK_SITE", f"{SSM_PREFIX}/link/site"),
                 ("Source code", "LINK_REPO", f"{SSM_PREFIX}/link/repo"),
                 ("How it works", "LINK_ARCHITECTURE", f"{SSM_PREFIX}/link/architecture"),
                 ("Demo / slides", "LINK_DEMO", f"{SSM_PREFIX}/link/demo"),

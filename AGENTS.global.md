@@ -110,10 +110,23 @@ catalog/schemas before repo 1's `liquibase update` can run.
 12. **End every chat response with BOTH summaries, in this order.** They do
     different jobs and neither replaces the other:
 
-    **(a) Your own summary — write it however the content deserves.** Prose,
-    a table, a diagram, whatever explains it best. This is where the reasoning,
-    the caveats, the "here is why this was harder than it looked", and the
-    things that do not fit a bucket belong. Do not flatten it to fit a template.
+    **(a) Your own summary — bullets only.** This is where the reasoning, the
+    caveats, the "here is why this was harder than it looked", and the things
+    that do not fit a bucket belong. Choose the content freely; do not choose
+    the form. **Every line is a bullet.** No paragraphs of prose between
+    headings, no narrative build-up, no "first… then… finally". Sub-bullets and
+    short headings are fine. A table is fine where a table genuinely reads
+    better than a list — a comparison across the same columns. A code block or
+    diagram is fine as the body of a bullet.
+
+    The reason is not tidiness. A wall of prose at the end of a long response is
+    where a caveat goes to die: the reader skims it, and the one sentence that
+    mattered was in the middle of the third paragraph. Bullets force one idea
+    per line and make skipping safe.
+
+    This applies to **any** response that ends with a summary, in any repo, on
+    any kind of task — code, research, a question answered, a plan. If the
+    response ends with a summary for the user to read, it is bullets.
 
     **(b) The structured status block below.** Freeform writing loses things:
     an unanswered question slides away when the conversation moves on, and a
@@ -165,6 +178,23 @@ catalog/schemas before repo 1's `liquibase update` can run.
     with `ParameterNotFound` because parameters are regional. This file said
     `us-east-1` until 2026-08-01 and repos 1 and 3 inherited it; if you are about
     to write any other region, you are re-introducing that bug.
+
+## "Apply" means the whole sequence, not the first step
+
+When the user says **apply** (or `app1`, `app2`, …), that is one instruction covering
+**PR → wait for CI → merge → tag**, and where the repo has one, the deploy that follows.
+Finish it. Do not open a PR and hand the merge back — a branch sitting unmerged is not
+an applied change, and the user asked for the outcome, not the first move.
+
+- Wait for CI rather than merging blind. If it fails, fix it and keep going; a red merge
+  is not "done" either.
+- If the merge genuinely cannot proceed — a conflict needing a human decision, a failing
+  check you cannot fix, another thread's PR in the way — say so explicitly and name what
+  you need. Silence plus an open PR reads as completion and is not.
+- Tag after merging, and say what the tag triggers (repo 1's `v*` fires `apply-ddl` and
+  `publish`; repo 4's does not deploy on its own).
+- Never report an apply as successful without checking CI **on the merge commit**. Merged
+  and tagged is not the same as green.
 
 ## Sensitive values — these repos are PUBLIC
 

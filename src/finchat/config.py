@@ -103,7 +103,11 @@ class Settings:
                 # on /chat first has no other route to the tables and filings.
                 ("Main Page", "LINK_SITE", f"{SSM_PREFIX}/link/site"),
                 ("Source code", "LINK_REPO", f"{SSM_PREFIX}/link/repo"),
-                ("How it works", "LINK_ARCHITECTURE", f"{SSM_PREFIX}/link/architecture"),
+                # No "How it works" here any more. It pointed at an architecture
+                # diagram in repo 1, which was the answer to that question before
+                # the site had a home page; now the write-up on the Main Page
+                # covers it in full, with those diagrams inline. Two links
+                # answering the same question sent people to the worse one.
                 ("Demo / slides", "LINK_DEMO", f"{SSM_PREFIX}/link/demo"),
                 ("Write-up", "LINK_WRITEUP", f"{SSM_PREFIX}/link/writeup"),
             )

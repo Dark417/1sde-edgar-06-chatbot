@@ -100,3 +100,36 @@ def test_model_access_failure_still_names_the_models() -> None:
     assert "no invocable Bedrock model" in msg
     assert "ResourceNotFoundException" in msg
     assert "Credentials worked" in msg
+
+
+# --- sidebar links -----------------------------------------------------------
+
+
+def test_architecture_link_is_gone(monkeypatch) -> None:
+    """The removed architecture link, and why a stale value must not revive it.
+
+    "How it works" is gone from the sidebar.
+
+    The parameter /edgar-lakehouse/chat/link/architecture still exists in the
+    account. Config is env-first, so if the label were still listed here that
+    value would keep rendering a second, worse answer to the question the Main
+    Page write-up now answers in full.
+    """
+    monkeypatch.setenv("LINK_ARCHITECTURE", "https://example.invalid/diagram.png")
+    monkeypatch.setenv("LINK_SITE", "https://example.invalid/")
+    settings = config.Settings.load()
+    assert "How it works" not in settings.links
+    assert "https://example.invalid/diagram.png" not in settings.links.values()
+    assert settings.links["Main Page"] == "https://example.invalid/"
+
+
+def test_link_labels_are_the_expected_set(monkeypatch) -> None:
+    """Every configurable link, so adding one is a deliberate edit here too."""
+    for env in ("LINK_SITE", "LINK_REPO", "LINK_DEMO", "LINK_WRITEUP"):
+        monkeypatch.setenv(env, "https://example.invalid/x")
+    assert set(config.Settings.load().links) == {
+        "Main Page",
+        "Source code",
+        "Demo / slides",
+        "Write-up",
+    }

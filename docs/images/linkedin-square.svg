@@ -6,68 +6,61 @@
   </marker>
 </defs>
 
-<text x="600" y="86" font-size="44" fill="#111827" text-anchor="middle" font-weight="700">Chat with SEC filings</text>
-<text x="600" y="128" font-size="20" fill="#6B7280" text-anchor="middle" font-weight="400">From a public filing to a plain-English answer, once a day</text>
+<text x="600" y="94" font-size="46" fill="#111827" text-anchor="middle" font-weight="700">Chat with SEC filings</text>
+<text x="600" y="138" font-size="21" fill="#6B7280" text-anchor="middle" font-weight="400">From a public filing to a plain-English answer, once a day</text>
 
 <!-- 1 · SEC EDGAR -->
-<rect x="110" y="180" width="980" height="150" rx="12" fill="#F3F4F6" stroke="#4B5563" stroke-width="2.5"/>
-<circle cx="200" cy="255" r="50" fill="#FFFFFF" stroke="#4B5563" stroke-width="2.5"/>
-<g transform="translate(150,205)" stroke="#374151" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
-  <path d="M28 18 h30 l16 16 v48 a5 5 0 0 1 -5 5 h-41 a5 5 0 0 1 -5 -5 v-59 a5 5 0 0 1 5 -5 z" fill="#FFFFFF"/>
-  <path d="M58 18 v16 h16" fill="none"/>
-  <path d="M36 50 h28 M36 61 h28 M36 72 h18" fill="none"/>
+<rect x="100" y="210" width="1000" height="190" rx="14" fill="#F3F4F6" stroke="#4B5563" stroke-width="2.5"/>
+<circle cx="210" cy="305" r="58" fill="#FFFFFF" stroke="#4B5563" stroke-width="2.5"/>
+<g transform="translate(160,255)" fill="#1F2937">
+  <path d="M50 17 L87 38 H13 Z"/>
+  <rect x="17" y="43" width="66" height="7" rx="1"/>
+  <rect x="24" y="55" width="9" height="25"/>
+  <rect x="38" y="55" width="9" height="25"/>
+  <rect x="53" y="55" width="9" height="25"/>
+  <rect x="67" y="55" width="9" height="25"/>
+  <rect x="13" y="84" width="74" height="8" rx="2"/>
 </g>
-<text x="300" y="236" font-size="27" fill="#111827" text-anchor="start" font-weight="700">SEC EDGAR</text>
-<text x="300" y="270" font-size="19" fill="#374151" text-anchor="start" font-weight="400">every US public company files its results here</text>
-<text x="300" y="299" font-size="17" fill="#6B7280" text-anchor="start" font-weight="400">free, no key, no account &#183; 5 requests per second</text>
+<text x="330" y="282" font-size="30" fill="#111827" text-anchor="start" font-weight="700">SEC EDGAR</text>
+<text x="330" y="324" font-size="20" fill="#374151" text-anchor="start" font-weight="400">every US public company files its results here</text>
+<text x="330" y="360" font-size="18" fill="#6B7280" text-anchor="start" font-weight="400">free, no key, no account &#183; 5 requests per second</text>
 
-<line x1="200" y1="334" x2="200" y2="374" stroke="#4B5563" stroke-width="3.5" marker-end="url(#a)"/>
+<line x1="210" y1="404" x2="210" y2="452" stroke="#4B5563" stroke-width="4" marker-end="url(#a)"/>
 
 <!-- 2 · AWS -->
-<rect x="110" y="378" width="980" height="150" rx="12" fill="#FFF7ED" stroke="#C2410C" stroke-width="2.5"/>
-<circle cx="200" cy="453" r="50" fill="#FFFFFF" stroke="#C2410C" stroke-width="2.5"/>
-<g transform="translate(150,403)">
-  <rect x="24" y="51" width="52" height="16" rx="8" fill="#C2410C"/>
-  <circle cx="40" cy="47" r="15" fill="#C2410C"/>
-  <circle cx="58" cy="42" r="19" fill="#C2410C"/>
-  <circle cx="70" cy="53" r="12" fill="#C2410C"/>
+<rect x="100" y="456" width="1000" height="190" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/>
+<circle cx="210" cy="551" r="58" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.5"/>
+<g transform="translate(157,505)" fill="#FF9900">
+  <rect x="24" y="51" width="52" height="16" rx="8"/>
+  <circle cx="40" cy="47" r="15"/>
+  <circle cx="58" cy="42" r="19"/>
+  <circle cx="70" cy="53" r="12"/>
 </g>
-<text x="300" y="434" font-size="27" fill="#111827" text-anchor="start" font-weight="700">AWS</text>
-<text x="300" y="468" font-size="19" fill="#374151" text-anchor="start" font-weight="400">a container pulls the day's filings each morning</text>
-<text x="300" y="497" font-size="17" fill="#6B7280" text-anchor="start" font-weight="400">S3 keeps the response exactly as it arrived</text>
+<text x="330" y="528" font-size="30" fill="#111827" text-anchor="start" font-weight="700">AWS</text>
+<text x="330" y="570" font-size="20" fill="#374151" text-anchor="start" font-weight="400">a container pulls the day's filings each morning</text>
+<text x="330" y="606" font-size="18" fill="#6B7280" text-anchor="start" font-weight="400">S3 keeps the response exactly as it arrived</text>
 
-<line x1="200" y1="532" x2="200" y2="572" stroke="#4B5563" stroke-width="3.5" marker-end="url(#a)"/>
+<line x1="210" y1="650" x2="210" y2="698" stroke="#4B5563" stroke-width="4" marker-end="url(#a)"/>
 
 <!-- 3 · Databricks -->
-<rect x="110" y="576" width="980" height="150" rx="12" fill="#FEF3C7" stroke="#B45309" stroke-width="2.5"/>
-<circle cx="200" cy="651" r="50" fill="#FFFFFF" stroke="#B45309" stroke-width="2.5"/>
-<g transform="translate(150,601)">
-  <rect x="22" y="23" width="56" height="14" rx="4" fill="#B87333" stroke="#7C2D12" stroke-width="2"/>
-  <rect x="22" y="43" width="56" height="14" rx="4" fill="#CBD5E1" stroke="#64748B" stroke-width="2"/>
-  <rect x="22" y="63" width="56" height="14" rx="4" fill="#EAB308" stroke="#A16207" stroke-width="2"/>
+<rect x="100" y="702" width="1000" height="190" rx="14" fill="#FEF2F2" stroke="#FF3621" stroke-width="2.5"/>
+<circle cx="210" cy="797" r="58" fill="#FFFFFF" stroke="#FF3621" stroke-width="2.5"/>
+<g transform="translate(181.2,768.2) scale(2.4)" fill="#FF3621">
+  <path d="M.95 14.184L12 20.403l9.919-5.55v2.21L12 22.662l-10.484-5.96-.565.308v.77L12 24l11.05-6.218v-4.317l-.515-.309L12 19.118l-9.867-5.653v-2.21L12 16.805l11.05-6.218V6.32l-.515-.308L12 11.974 2.647 6.681 12 1.388l7.76 4.368.668-.411v-.566L12 0 .95 6.27v.72L12 13.207l9.919-5.55v2.26L12 15.52 1.516 9.56l-.565.308Z"/>
 </g>
-<text x="300" y="632" font-size="27" fill="#111827" text-anchor="start" font-weight="700">Databricks</text>
-<text x="300" y="666" font-size="19" fill="#374151" text-anchor="start" font-weight="400">bronze to silver to gold, once per morning</text>
-<text x="300" y="695" font-size="17" fill="#6B7280" text-anchor="start" font-weight="400">a restatement is a new row, not an edit to the old one</text>
+<text x="330" y="774" font-size="30" fill="#111827" text-anchor="start" font-weight="700">Databricks</text>
+<text x="330" y="816" font-size="20" fill="#374151" text-anchor="start" font-weight="400">bronze to silver to gold, once per morning</text>
+<text x="330" y="852" font-size="18" fill="#6B7280" text-anchor="start" font-weight="400">a restatement is a new row, not an edit to the old one</text>
 
-<line x1="200" y1="730" x2="200" y2="770" stroke="#4B5563" stroke-width="3.5" marker-end="url(#a)"/>
+<line x1="210" y1="896" x2="210" y2="944" stroke="#4B5563" stroke-width="4" marker-end="url(#a)"/>
 
-<!-- 4 · AI agent -->
-<rect x="110" y="774" width="980" height="150" rx="12" fill="#DBEAFE" stroke="#1D4ED8" stroke-width="2.5"/>
-<circle cx="200" cy="849" r="50" fill="#FFFFFF" stroke="#1D4ED8" stroke-width="2.5"/>
-<g transform="translate(150,799)">
-  <path d="M24 21 h52 a8 8 0 0 1 8 8 v30 a8 8 0 0 1 -8 8 h-28 l-14 13 v-13 h-10 a8 8 0 0 1 -8 -8 v-30 a8 8 0 0 1 8 -8 z" fill="#FFFFFF" stroke="#1D4ED8" stroke-width="3.5" stroke-linejoin="round"/>
-  <circle cx="40" cy="44" r="4" fill="#1D4ED8"/>
-  <circle cx="53" cy="44" r="4" fill="#1D4ED8"/>
-  <circle cx="66" cy="44" r="4" fill="#1D4ED8"/>
+<!-- 4 · Claude -->
+<rect x="100" y="948" width="1000" height="190" rx="14" fill="#FDF5F2" stroke="#D97757" stroke-width="2.5"/>
+<circle cx="210" cy="1043" r="58" fill="#FFFFFF" stroke="#D97757" stroke-width="2.5"/>
+<g transform="translate(181.2,1014.2) scale(2.4)" fill="#D97757">
+  <path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/>
 </g>
-<text x="300" y="830" font-size="27" fill="#111827" text-anchor="start" font-weight="700">AI agent</text>
-<text x="300" y="864" font-size="19" fill="#374151" text-anchor="start" font-weight="400">picks one of 9 fixed SQL tools, never does the math</text>
-<text x="300" y="893" font-size="17" fill="#6B7280" text-anchor="start" font-weight="400">every figure comes from a query, shown with its trace</text>
-
-<rect x="110" y="962" width="980" height="92" rx="12" fill="#111827"/>
-<text x="600" y="1022" font-size="38" fill="#FFFFFF" text-anchor="middle" font-weight="700">edgar.xiaoxiaolei.com</text>
-
-<text x="600" y="1102" font-size="17" fill="#6B7280" text-anchor="middle" font-weight="400">Live demo on Databricks Free Edition &#183; non-commercial &#183; not investment advice</text>
-<text x="600" y="1130" font-size="17" fill="#6B7280" text-anchor="middle" font-weight="400">6 repositories, one pinned contracts package so they cannot drift</text>
+<text x="330" y="1020" font-size="30" fill="#111827" text-anchor="start" font-weight="700">Claude &#183; the AI agent</text>
+<text x="330" y="1062" font-size="20" fill="#374151" text-anchor="start" font-weight="400">picks one of 9 fixed SQL tools, never does the math</text>
+<text x="330" y="1098" font-size="18" fill="#6B7280" text-anchor="start" font-weight="400">every figure comes from a query, shown with its trace</text>
 </svg>

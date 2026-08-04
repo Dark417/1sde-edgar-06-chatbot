@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="330" viewBox="0 0 900 330" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="900" height="330" fill="#FFFFFF"/>
+  <rect x="1" y="1" width="898" height="328" rx="10" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="2"/>
+
+  <!-- A filing, drawn rather than borrowed. Deliberately not the SEC seal: this is a
+       third-party project and reusing the agency's mark would imply endorsement. -->
+  <g>
+    <rect x="40" y="46" width="128" height="164" rx="6" fill="#F8FAFC" stroke="#1F2937" stroke-width="2.5"/>
+    <path d="M138 46 L168 76 L138 76 Z" fill="#E2E8F0" stroke="#1F2937" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="60" y1="96"  x2="148" y2="96"  stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+    <line x1="60" y1="116" x2="148" y2="116" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+    <line x1="60" y1="136" x2="120" y2="136" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+    <!-- the revised figure: struck through, replaced, both kept -->
+    <line x1="60" y1="160" x2="104" y2="160" stroke="#B91C1C" stroke-width="4" stroke-linecap="round"/>
+    <line x1="56" y1="160" x2="108" y2="160" stroke="#B91C1C" stroke-width="2"/>
+    <line x1="116" y1="160" x2="148" y2="160" stroke="#15803D" stroke-width="4" stroke-linecap="round"/>
+    <line x1="60" y1="182" x2="148" y2="182" stroke="#94A3B8" stroke-width="4" stroke-linecap="round"/>
+    <text x="104" y="240" font-size="15" font-weight="700" fill="#1F2937" text-anchor="middle">10-K / 10-Q</text>
+    <text x="104" y="262" font-size="13" fill="#6B7280" text-anchor="middle">and their amendments</text>
+  </g>
+
+  <text x="216" y="76" font-size="27" font-weight="700" fill="#111827">SEC EDGAR</text>
+  <text x="216" y="104" font-size="15" fill="#374151">Electronic Data Gathering, Analysis and Retrieval — every public</text>
+  <text x="216" y="126" font-size="15" fill="#374151">company's filings, free, no key, no account.</text>
+
+  <rect x="216" y="150" width="644" height="76" rx="8" fill="#DBEAFE" stroke="#1D4ED8" stroke-width="2"/>
+  <text x="238" y="176" font-size="14" font-weight="700" fill="#1D4ED8">The three endpoints this project reads</text>
+  <text x="238" y="199" font-size="13" fill="#1E3A5F" font-family="ui-monospace, Consolas, monospace">/Archives/edgar/daily-index/…  ·  /submissions/CIK…json</text>
+  <text x="238" y="218" font-size="13" fill="#1E3A5F" font-family="ui-monospace, Consolas, monospace">/api/xbrl/companyconcept/CIK…/us-gaap/…json</text>
+
+  <text x="216" y="256" font-size="14" fill="#B91C1C">The catch: a filed figure can be revised later, and both versions are official.</text>
+  <text x="216" y="278" font-size="14" fill="#374151">Overwrite the old one and you can no longer say what was known at the time.</text>
+  <text x="216" y="304" font-size="13" fill="#6B7280">Rate limit 5 requests/second, and a real contact email in the User-Agent — the SEC returns 403 without one.</text>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="580" viewBox="0 0 1500 580" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1500" height="580" fill="#FFFFFF"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#374151"/></marker></defs>
+<text x="40" y="46" font-size="26" fill="#111827" text-anchor="start" font-weight="700">4 - Six repositories, and what depends on what</text>
+<text x="40" y="76" font-size="15" fill="#6B7280" text-anchor="start" font-weight="400">An arrow means 'installs from' or 'reads from'. Nothing points backwards, so a change is never made twice.</text>
+<rect x="560" y="130" width="380" height="88" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="3"/>
+<text x="750" y="160" font-size="16" fill="#15803D" text-anchor="middle" font-weight="700">repo 1 - contracts</text>
+<text x="750" y="184" font-size="13" fill="#14532D" text-anchor="middle" font-weight="400">the shared vocabulary, one wheel</text>
+<text x="750" y="206" font-size="13" fill="#6B7280" text-anchor="middle" font-weight="400">13 tables, 43 migrations</text>
+<rect x="560" y="258" width="380" height="88" rx="8" fill="#DBEAFE" stroke="#1D4ED8" stroke-width="3"/>
+<text x="750" y="288" font-size="16" fill="#1D4ED8" text-anchor="middle" font-weight="700">repo 2 - infrastructure</text>
+<text x="750" y="312" font-size="13" fill="#1E3A5F" text-anchor="middle" font-weight="400">buckets, roles, schedules, the host</text>
+<text x="750" y="334" font-size="13" fill="#6B7280" text-anchor="middle" font-weight="400">publishes names through SSM</text>
+<rect x="40" y="420" width="270" height="88" rx="8" fill="#FFFFFF" stroke="#1F2937" stroke-width="2"/>
+<text x="175" y="456" font-size="15" fill="#111827" text-anchor="middle" font-weight="700">repo 3 - ingest</text>
+<text x="175" y="480" font-size="12" fill="#374151" text-anchor="middle" font-weight="400">pulls EDGAR into S3 and the Volume</text>
+<rect x="330" y="420" width="270" height="88" rx="8" fill="#FFFFFF" stroke="#1F2937" stroke-width="2"/>
+<text x="465" y="456" font-size="15" fill="#111827" text-anchor="middle" font-weight="700">repo 4 - pipelines</text>
+<text x="465" y="480" font-size="12" fill="#374151" text-anchor="middle" font-weight="400">bronze, silver, gold, export</text>
+<rect x="620" y="420" width="270" height="88" rx="8" fill="#FEF3C7" stroke="#B45309" stroke-width="3"/>
+<text x="755" y="456" font-size="15" fill="#111827" text-anchor="middle" font-weight="700">repo 5 - serving</text>
+<text x="755" y="480" font-size="12" fill="#374151" text-anchor="middle" font-weight="400">the site and JSON API</text>
+<rect x="910" y="420" width="270" height="88" rx="8" fill="#FEF3C7" stroke="#B45309" stroke-width="3"/>
+<text x="1045" y="456" font-size="15" fill="#111827" text-anchor="middle" font-weight="700">repo 6 - chatbot</text>
+<text x="1045" y="480" font-size="12" fill="#374151" text-anchor="middle" font-weight="400">ask questions in English</text>
+<line x1="175" y1="420" x2="175" y2="384" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="5 4"/>
+<line x1="465" y1="420" x2="465" y2="384" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="5 4"/>
+<line x1="755" y1="420" x2="755" y2="384" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="5 4"/>
+<line x1="1045" y1="420" x2="1045" y2="384" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="5 4"/>
+<line x1="175" y1="384" x2="1045" y2="384" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="5 4"/>
+<line x1="500" y1="384" x2="500" y2="174" stroke="#15803D" stroke-width="2" stroke-dasharray="5 4"/>
+<line x1="500" y1="174" x2="554" y2="174" stroke="#15803D" stroke-width="2.5" marker-end="url(#a)"/>
+<line x1="1000" y1="384" x2="1000" y2="302" stroke="#1D4ED8" stroke-width="2" stroke-dasharray="5 4"/>
+<line x1="1000" y1="302" x2="946" y2="302" stroke="#1D4ED8" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="1230" y="420" width="230" height="88" rx="8" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1345" y="456" font-size="15" fill="#6B7280" text-anchor="middle" font-weight="700">your browser</text>
+<text x="1345" y="480" font-size="12" fill="#6B7280" text-anchor="middle" font-weight="400">one domain, two pages</text>
+<line x1="1230" y1="464" x2="1188" y2="464" stroke="#6B7280" stroke-width="2.5" marker-end="url(#a)"/>
+<text x="750" y="548" font-size="14" fill="#6B7280" text-anchor="middle" font-weight="400">Repos 3-6 install repo 1's wheel at a pinned version and read repo 2's SSM parameters. Neither repo 1 nor repo 2 depends on anything downstream.</text>
+</svg>

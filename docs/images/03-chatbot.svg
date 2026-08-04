@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="600" viewBox="0 0 1500 600" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1500" height="600" fill="#FFFFFF"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#374151"/></marker></defs>
+<text x="40" y="46" font-size="26" fill="#111827" text-anchor="start" font-weight="700">3 - How the chatbot answers</text>
+<text x="40" y="76" font-size="15" fill="#6B7280" text-anchor="start" font-weight="400">The model never calculates. It picks one of nine fixed SQL tools; every number in an answer came from a query.</text>
+<rect x="40" y="180" width="252" height="120" rx="8" fill="#FFFFFF" stroke="#4B5563" stroke-width="2"/>
+<text x="166" y="214" font-size="15" fill="#111827" text-anchor="middle" font-weight="700">You ask</text>
+<text x="166" y="242" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">Which filings</text>
+<text x="166" y="264" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">were restated?</text>
+<line x1="292" y1="240" x2="326" y2="240" stroke="#374151" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="332" y="180" width="252" height="120" rx="8" fill="#FEF3C7" stroke="#B45309" stroke-width="3"/>
+<text x="458" y="214" font-size="15" fill="#111827" text-anchor="middle" font-weight="700">Model (Bedrock)</text>
+<text x="458" y="242" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">picks a tool</text>
+<text x="458" y="264" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">and its arguments</text>
+<line x1="584" y1="240" x2="618" y2="240" stroke="#374151" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="624" y="180" width="252" height="120" rx="8" fill="#DBEAFE" stroke="#1D4ED8" stroke-width="2"/>
+<text x="750" y="214" font-size="15" fill="#111827" text-anchor="middle" font-weight="700">Tool registry</text>
+<text x="750" y="242" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">nine fixed SQL</text>
+<text x="750" y="264" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">queries only</text>
+<line x1="876" y1="240" x2="910" y2="240" stroke="#374151" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="916" y="180" width="252" height="120" rx="8" fill="#DCFCE7" stroke="#15803D" stroke-width="2"/>
+<text x="1042" y="214" font-size="15" fill="#111827" text-anchor="middle" font-weight="700">DuckDB</text>
+<text x="1042" y="242" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">read-only over</text>
+<text x="1042" y="264" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">the gold Parquet</text>
+<line x1="1168" y1="240" x2="1202" y2="240" stroke="#374151" stroke-width="2.5" marker-end="url(#a)"/>
+<rect x="1208" y="180" width="252" height="120" rx="8" fill="#FFFFFF" stroke="#1F2937" stroke-width="2"/>
+<text x="1334" y="214" font-size="15" fill="#111827" text-anchor="middle" font-weight="700">Answer</text>
+<text x="1334" y="242" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">numbers, tool trace</text>
+<text x="1334" y="264" font-size="13" fill="#374151" text-anchor="middle" font-weight="400">and citations</text>
+<rect x="40" y="350" width="700" height="216" rx="8" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1.5"/>
+<text x="64" y="384" font-size="16" fill="#111827" text-anchor="start" font-weight="700">The nine tools</text>
+<text x="64" y="416" font-size="14" fill="#374151" text-anchor="start" font-weight="400">- list_companies</text>
+<text x="404" y="416" font-size="14" fill="#374151" text-anchor="start" font-weight="400">- search_companies</text>
+<text x="64" y="446" font-size="14" fill="#374151" text-anchor="start" font-weight="400">- get_company_profile</text>
+<text x="404" y="446" font-size="14" fill="#374151" text-anchor="start" font-weight="400">- get_company_financials</text>
+<text x="64" y="476" font-size="14" fill="#374151" text-anchor="start" font-weight="400">- compare_companies</text>
+<text x="404" y="476" font-size="14" fill="#374151" text-anchor="start" font-weight="400">- get_restatements</text>
+<text x="64" y="506" font-size="14" fill="#374151" text-anchor="start" font-weight="400">- restatement_summary</text>
+<text x="404" y="506" font-size="14" fill="#374151" text-anchor="start" font-weight="400">- get_filing_activity</text>
+<text x="64" y="536" font-size="14" fill="#374151" text-anchor="start" font-weight="400">- get_data_coverage</text>
+<rect x="770" y="350" width="690" height="216" rx="8" fill="#FEE2E2" stroke="#B91C1C" stroke-width="2"/>
+<text x="794" y="384" font-size="16" fill="#B91C1C" text-anchor="start" font-weight="700">What it will not do</text>
+<text x="794" y="416" font-size="13" fill="#7F1D1D" text-anchor="start" font-weight="400">- No free-form SQL. The model cannot write a query.</text>
+<text x="794" y="446" font-size="13" fill="#7F1D1D" text-anchor="start" font-weight="400">- No arithmetic by the model. DuckDB computes, it reports.</text>
+<text x="794" y="476" font-size="13" fill="#7F1D1D" text-anchor="start" font-weight="400">- No writes: INSERT, ATTACH, COPY and httpfs are blocked.</text>
+<text x="794" y="506" font-size="13" fill="#7F1D1D" text-anchor="start" font-weight="400">- No warehouse access. It reads the same S3 export as repo 5.</text>
+<text x="794" y="536" font-size="13" fill="#7F1D1D" text-anchor="start" font-weight="400">- Every answer carries the tool trace that produced it.</text>
+</svg>

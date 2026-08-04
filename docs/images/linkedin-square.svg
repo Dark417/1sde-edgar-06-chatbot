@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1200" height="1200" fill="#FFFFFF"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#374151"/></marker></defs>
+
+<text x="600" y="94" font-size="46" fill="#111827" text-anchor="middle" font-weight="700">Chat with SEC filings</text>
+<text x="600" y="140" font-size="21" fill="#6B7280" text-anchor="middle" font-weight="400">A Databricks lakehouse, and an agent that never does the arithmetic</text>
+
+<rect x="150" y="200" width="900" height="125" rx="8" fill="#FFFFFF" stroke="#4B5563" stroke-width="2"/>
+<text x="600" y="242" font-size="24" fill="#111827" text-anchor="middle" font-weight="700">SEC EDGAR</text>
+<text x="600" y="274" font-size="18" fill="#374151" text-anchor="middle" font-weight="400">every US public company files its results here</text>
+<text x="600" y="302" font-size="17" fill="#6B7280" text-anchor="middle" font-weight="400">free, no key, no account &#183; 5 requests per second</text>
+
+<line x1="600" y1="329" x2="600" y2="379" stroke="#374151" stroke-width="2.5" marker-end="url(#a)"/>
+<text x="625" y="360" font-size="17" fill="#374151" text-anchor="start" font-weight="400">daily, over HTTPS</text>
+
+<rect x="150" y="383" width="900" height="125" rx="8" fill="#FFFFFF" stroke="#1F2937" stroke-width="2"/>
+<text x="600" y="425" font-size="24" fill="#111827" text-anchor="middle" font-weight="700">Ingest &#183; a container on ECS Fargate</text>
+<text x="600" y="457" font-size="18" fill="#374151" text-anchor="middle" font-weight="400">stores the response exactly as the SEC returned it</text>
+<text x="600" y="485" font-size="17" fill="#6B7280" text-anchor="middle" font-weight="400">nothing is parsed yet, so any later mistake can be re-derived</text>
+
+<line x1="600" y1="512" x2="600" y2="562" stroke="#374151" stroke-width="2.5" marker-end="url(#a)"/>
+<text x="625" y="543" font-size="17" fill="#374151" text-anchor="start" font-weight="400">gzip NDJSON, read by Auto Loader</text>
+
+<rect x="150" y="566" width="900" height="125" rx="8" fill="#FEF3C7" stroke="#B45309" stroke-width="3"/>
+<text x="600" y="608" font-size="24" fill="#111827" text-anchor="middle" font-weight="700">Databricks &#183; bronze to silver to gold</text>
+<text x="600" y="640" font-size="18" fill="#374151" text-anchor="middle" font-weight="400">a restatement is a new row, not an edit to the old one</text>
+<text x="600" y="668" font-size="17" fill="#6B7280" text-anchor="middle" font-weight="400">which is what lets you ask what was known back in March</text>
+
+<line x1="600" y1="695" x2="600" y2="745" stroke="#374151" stroke-width="2.5" marker-end="url(#a)"/>
+<text x="625" y="726" font-size="17" fill="#374151" text-anchor="start" font-weight="400">4 Parquet files, about 120 KB</text>
+
+<rect x="150" y="749" width="900" height="125" rx="8" fill="#DBEAFE" stroke="#1D4ED8" stroke-width="3"/>
+<text x="600" y="791" font-size="24" fill="#111827" text-anchor="middle" font-weight="700">Ask a question in plain English</text>
+<text x="600" y="823" font-size="18" fill="#374151" text-anchor="middle" font-weight="400">the model picks one of 9 fixed SQL tools &#183; DuckDB runs it</text>
+<text x="600" y="851" font-size="17" fill="#6B7280" text-anchor="middle" font-weight="400">every figure comes from a query, and each answer shows its trace</text>
+
+<rect x="150" y="930" width="900" height="96" rx="10" fill="#111827"/>
+<text x="600" y="991" font-size="40" fill="#FFFFFF" text-anchor="middle" font-weight="700">edgar.xiaoxiaolei.com</text>
+
+<text x="600" y="1072" font-size="17" fill="#6B7280" text-anchor="middle" font-weight="400">Live demo on Databricks Free Edition &#183; non-commercial &#183; not investment advice</text>
+<text x="600" y="1102" font-size="17" fill="#6B7280" text-anchor="middle" font-weight="400">6 repositories, one pinned contracts package so they cannot drift</text>
+</svg>

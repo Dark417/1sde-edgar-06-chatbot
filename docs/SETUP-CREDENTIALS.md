@@ -27,7 +27,7 @@ If `data\` is empty first run the export (needs the Databricks PAT from repo
 $env:DBX_HOST = "<workspace host>"          # docs/LOCAL-VALUES.md
 $env:DBX_WAREHOUSE_ID = "<warehouse id>"    # docs/LOCAL-VALUES.md
 $env:DBX_TOKEN = "<pat>"
-.venv\Scripts\python scripts\export_gold.py
+aws s3 sync s3://<serving-bucket>/v1 ./data   # repo 4 owns this export
 ```
 
 ## 2. ✅ Claude on Bedrock — DONE for this account, nothing to do
